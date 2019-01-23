@@ -2,7 +2,7 @@
 
 
 ## Resources
-
+https://github.com/WiringPi/WiringPi
 ### 8 Channel 10-bit ADC
 
 * https://learn.adafruit.com/raspberry-pi-analog-to-digital-converters/mcp3008
