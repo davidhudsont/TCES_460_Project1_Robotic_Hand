@@ -1,0 +1,15 @@
+syntax = "proto3";
+package demo;
+
+message Hand_Server{
+    repeated int32 pressure = 1 [packed=true];
+}
+
+message Glove_Client{
+    repeated int32 finger = 1 [packed=true];
+    repeated int32 wrist = 2 [packed=true];
+}
+    
+    
+
+
