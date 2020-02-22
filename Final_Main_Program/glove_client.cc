@@ -56,7 +56,7 @@ LSM9DS1 imu(IMU_MODE_I2C, 0x6b, 0x1e);
 
 float R_DIV = 47000.000f;
 const float STR_R[5]= {10900.00f,13555.00f,11850.00f,12359.00f,12213.00f};
-//			 pinky ring middle  index  thumb
+//           pinky ring middle  index  thumb
 const float BEND_R[5] = {19500.000f,20000.00f,19000.00f,19000.00f,18000.00f};
 
 const int PWM[8] = {25,24,23,22,21,28,29,26};
@@ -71,8 +71,9 @@ int ROLLMAX = 3.0*10.0;
 int ROLLMIN = 0;
 int PITCHMAX = 20;
 int PITCHMIN = 0;
-int YAWMIN = 39;//This depends on the orientation of the IMU, needs to be adjusted if we change location/starting orientation
-int YAWMAX = 80;//This also depends on starting orientation, will need to be adjusted
+int YAWMIN = 39; //This depends on the orientation of the IMU, needs to be adjusted if we change location/starting orientation
+int YAWMAX = 80; //This also depends on starting orientation, will need to be adjusted
+
 
 /**
  * @brief If an error happens report the msg
@@ -84,6 +85,7 @@ void error(const char *msg){
       perror(msg);
      exit(0);
 }
+
 
 /**
  * @brief Add wrist and finger sensor data to
@@ -98,6 +100,7 @@ void hand_setup(void){
         glove_data.add_wrist(i);
     }
 }
+
 
 /**
  * @brief Setup the client to communicate to the robotic
@@ -119,6 +122,7 @@ void server_setup(void){
     hand_setup();
 }
 
+
 /**
  * @brief Print the data that will be sent to the 
  * robotic arm controller.
@@ -133,8 +137,9 @@ void print_send(void){
     for(int i =0; i<3;i++){
         printf("%d\n", glove_data.wrist(i));
     }
-	cout << "End of Finger and Wrist Send data" << endl;
+    cout << "End of Finger and Wrist Send data" << endl;
 }
+
 
 /**
  * @brief Print the recieved data from
@@ -142,12 +147,13 @@ void print_send(void){
  * 
  */
 void print_receive() {
-	cout << "Pressure Receive Values" << endl;
-	for (int i=0; i<5; i++) {
-		cout << pressure[i] << endl;
-	}
-	cout << "End of Pressure Receive Values" << endl;
+    cout << "Pressure Receive Values" << endl;
+    for (int i=0; i<5; i++) {
+        cout << pressure[i] << endl;
+    }
+    cout << "End of Pressure Receive Values" << endl;
 }
+
 
 /**
  * @brief Print the servo data for the 
@@ -155,19 +161,20 @@ void print_receive() {
  * 
  */
 void print_servo() {
-	cout << "Servo Values" << endl;
-	for (int i=0; i<5; i++) {
-		cout << servo_val[i] << endl;
-	}
-	cout << "End of Servo values" << endl;
+    cout << "Servo Values" << endl;
+    for (int i=0; i<5; i++) {
+        cout << servo_val[i] << endl;
+    }
+    cout << "End of Servo values" << endl;
 }
+
 
 /**
  * @brief Send the sensor data
  * to the robotic hand controller.
  * 
  */
-void send_data(void){
+void send_data(void) {
     char buffer[max_data_size] = {0};
     for(int i =0; i < 5; i++){
         glove_data.set_finger(i,finger[i]+1);
@@ -176,7 +183,7 @@ void send_data(void){
         glove_data.set_wrist(i,wrist[i]+1);
     }
     std::string data;
-	cout << "start Sent glove data" << endl;
+    cout << "start Sent glove data" << endl;
     glove_data.SerializeToString(&data);
     sprintf(buffer, "%s", data.c_str());
     print_send();
@@ -186,7 +193,9 @@ void send_data(void){
     if (n < 0) error("Sendto");
     printf("send finish /n");
 }
-void receive(){
+
+
+void receive() {
     char buffer[max_data_size] = {0};
     n = recvfrom(sock,buffer,max_data_size,0,(struct sockaddr *)&server,&length);
     if (n < 0) error("recvfrom");
@@ -199,6 +208,7 @@ void receive(){
     }
     printf("finish receive glove_data\n");
 }
+
 
 /**
  * @brief Used for map a set of values onto
@@ -214,15 +224,16 @@ void receive(){
  * @return int 
  */
 int map(int x, int in_min, int in_max, int out_min, int out_max) {
-	int ret =  (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-	if (ret > out_max) {
-		ret = out_max-1;
-	}
-	if (ret < out_min) {
-		ret = out_min+1;
-	}
-	return ret;
+    int ret =  (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    if (ret > out_max) {
+        ret = out_max-1;
+    }
+    if (ret < out_min) {
+        ret = out_min+1;
+    }
+    return ret;
 }
+
 
 /**
  * @brief Used for map a set of values onto
@@ -238,16 +249,17 @@ int map(int x, int in_min, int in_max, int out_min, int out_max) {
  * @return int 
  */
 int imu_map(int x, int in_min, int in_max, int out_min, int out_max) {
-	int ret =  (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-	if (ret > out_max) {
-		ret = out_max-1;
-	}
-	if (ret < out_min) {
-		ret = out_min+1;
-	}
-	ret = out_max-ret;
-	return ret;
+    int ret =  (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    if (ret > out_max) {
+        ret = out_max-1;
+    }
+    if (ret < out_min) {
+        ret = out_min+1;
+    }
+    ret = out_max-ret;
+    return ret;
 }
+
 
 /**
  * @brief Setup the pwm control
@@ -257,11 +269,12 @@ int imu_map(int x, int in_min, int in_max, int out_min, int out_max) {
  * @param range : The maximum value for the pwm
  */
 void servo_setup(int size) {
-	for (int i=0; i<size; i++) {
-		pinMode(PWM[i],OUTPUT);
-		softPwmCreate(PWM[i],0,range);
-	}
+    for (int i=0; i<size; i++) {
+        pinMode(PWM[i],OUTPUT);
+        softPwmCreate(PWM[i],0,range);
+    }
 }
+
 
 /**
  * @brief Write pwm values to the buzzers
@@ -270,10 +283,11 @@ void servo_setup(int size) {
  * @param[in] size : The number of buzzers to write to. 
  */
 void servo_write(int size) {
-	for (int i=0; i<size; i++) {
-		softPwmWrite(PWM[i],servo_val[i]);
-	}
+    for (int i=0; i<size; i++) {
+        softPwmWrite(PWM[i],servo_val[i]);
+    }
 }
+
 
 /**
  * @brief Set the servo values array
@@ -281,10 +295,11 @@ void servo_write(int size) {
  * 
  */
 void servo_val_set() {
-	for (int i=0; i<5; i++) {
-		servo_val[i] = pressure[i];
-	}
+    for (int i=0; i<5; i++) {
+        servo_val[i] = pressure[i];
+    }
 }
+
 
 /**
  * @brief Read the flex resistors
@@ -293,10 +308,11 @@ void servo_val_set() {
  * @param[in] base : base address of the adc. 
  */
 void flex_read(int base) {
-	for (int i=0; i<5; i++) {
-		flex_data[i] = (float)analogRead(base+i);
-	}
+    for (int i=0; i<5; i++) {
+        flex_data[i] = (float)analogRead(base+i);
+    }
 }
+
 
 /**
  * @brief Calculate the resistance of
@@ -305,11 +321,11 @@ void flex_read(int base) {
  * @param[in] size : The number of flex resistors to calculate.
  */
 void calc_all(int size) {
-	for (int i=0; i<size; i++) {
-		flex_voltage[i] = (float)(flex_data[i]*(5.0f)/1023.0f);
-		resistance[i] = (float)(R_DIV*(5.0f/flex_voltage[i] - 1.0f));
-		finger[i] = map(resistance[i],STR_R[i],BEND_R[i],0,range);
-	}
+    for (int i=0; i<size; i++) {
+        flex_voltage[i] = (float)(flex_data[i]*(5.0f)/1023.0f);
+        resistance[i] = (float)(R_DIV*(5.0f/flex_voltage[i] - 1.0f));
+        finger[i] = map(resistance[i],STR_R[i],BEND_R[i],0,range);
+    }
 }
 
 
@@ -318,65 +334,70 @@ void calc_all(int size) {
  * 
  */
 void imu_read_calc() {
-		while(!imu.gyroAvailable());
-		imu.readGyro();
-		while(!imu.accelAvailable());
-		imu.readAccel();
-		while(!imu.magAvailable());
-		imu.readMag();
-		printf("gyro: %f, %f, %f [deg/s]\n", imu.calcGyro(imu.gx), imu.calcGyro(imu.gy), imu.calcGyro(imu.gz));
-		printf("Accel: %f, %f, %f [Gs]\n", imu.calcAccel(imu.ax), imu.calcAccel(imu.ay), imu.calcAccel(imu.az));
-		printf("Mag: %f, %f, %f [gauss]\n", imu.calcMag(imu.mx), imu.calcMag(imu.my), imu.calcMag(imu.mz));
-		float accXnorm = imu.ax/sqrt(pow(imu.ax,2)+pow(imu.ay,2)+pow(imu.az,2));
-		float accYnorm = imu.ay/sqrt(pow(imu.ax,2)+pow(imu.ay,2)+pow(imu.az,2));
-		float accZnorm = imu.az/sqrt(pow(imu.ax,2)+pow(imu.ay,2)+pow(imu.ax,2));
-		float pitch = asin(accXnorm);
-		float outputPitch = (pitch +1.0)*10.0;
-		float roll = -asin(accYnorm/cos(pitch));
-		float outputRoll = (roll +1.0)*10.0;
-		float magXcomp = imu.mx*cos(pitch)+imu.mz*sin(pitch);
-		float magYcomp = imu.mx*sin(roll)*sin(pitch)+imu.my*cos(roll)-imu.mz*sin(roll)*cos(pitch);
-		printf("pitch: %f \n", outputPitch);
-		printf("roll: %f \n", roll);
-		float heading = 180*atan2(magYcomp,magXcomp)/PI;
-		printf("heading: %f\n", heading);
-		wrist[0] = map((int)outputRoll,ROLLMIN,ROLLMAX,0,range);
-		wrist[1] = imu_map((int)outputPitch,PITCHMIN,8,0,16);
-		wrist[2] = map((int)heading,YAWMIN,YAWMAX,0,range);
+    while(!imu.gyroAvailable());
+    imu.readGyro();
+    while(!imu.accelAvailable());
+    imu.readAccel();
+    while(!imu.magAvailable());
+    imu.readMag();
+    printf("gyro: %f, %f, %f [deg/s]\n", imu.calcGyro(imu.gx), imu.calcGyro(imu.gy), imu.calcGyro(imu.gz));
+    printf("Accel: %f, %f, %f [Gs]\n", imu.calcAccel(imu.ax), imu.calcAccel(imu.ay), imu.calcAccel(imu.az));
+    printf("Mag: %f, %f, %f [gauss]\n", imu.calcMag(imu.mx), imu.calcMag(imu.my), imu.calcMag(imu.mz));
+    float accXnorm = imu.ax/sqrt(pow(imu.ax,2)+pow(imu.ay,2)+pow(imu.az,2));
+    float accYnorm = imu.ay/sqrt(pow(imu.ax,2)+pow(imu.ay,2)+pow(imu.az,2));
+    float accZnorm = imu.az/sqrt(pow(imu.ax,2)+pow(imu.ay,2)+pow(imu.ax,2));
+    float pitch = asin(accXnorm);
+    float outputPitch = (pitch +1.0)*10.0;
+    float roll = -asin(accYnorm/cos(pitch));
+    float outputRoll = (roll +1.0)*10.0;
+    float magXcomp = imu.mx*cos(pitch)+imu.mz*sin(pitch);
+    float magYcomp = imu.mx*sin(roll)*sin(pitch)+imu.my*cos(roll)-imu.mz*sin(roll)*cos(pitch);
+    printf("pitch: %f \n", outputPitch);
+    printf("roll: %f \n", roll);
+    float heading = 180*atan2(magYcomp,magXcomp)/PI;
+    printf("heading: %f\n", heading);
+    wrist[0] = map((int)outputRoll,ROLLMIN,ROLLMAX,0,range);
+    wrist[1] = imu_map((int)outputPitch,PITCHMIN,8,0,16);
+    wrist[2] = map((int)heading,YAWMIN,YAWMAX,0,range);
 }
 
+
 int main(void){
-	GOOGLE_PROTOBUF_VERIFY_VERSION;
-	server_setup(); // Setup the server
-	wiringPiSetup(); // Setup wiring pi
-	int check;
-	check = mcp3004Setup(BASE,SPI_CHAN); // Start the ADC
-	if (check == -1) {
-		fprintf(stderr, "Failed to communicate with ADC_Chip.\n");
-        	exit(EXIT_FAILURE);
-	}
-	imu.begin(); // Start the IMU
-   	if (!imu.begin()) {
-        	fprintf(stderr, "Failed to communicate with LSM9DS1.\n");
-        	exit(EXIT_FAILURE);
-   	}
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    server_setup(); // Setup the server
+    wiringPiSetup(); // Setup wiring pi
+    int check;
+    check = mcp3004Setup(BASE,SPI_CHAN); // Start the ADC
+
+    if (check == -1) {
+        fprintf(stderr, "Failed to communicate with ADC_Chip.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    imu.begin(); // Start the IMU
+    if (!imu.begin()) {
+        fprintf(stderr, "Failed to communicate with LSM9DS1.\n");
+        exit(EXIT_FAILURE);
+    }
+
     imu.calibrate();        // Calibrate the IMU.
-	servo_setup(5);         // Setup the buzzers.
+    servo_setup(5);         // Setup the buzzers.
+
     // Main Loop
-	while(1) { 
-		flex_read(BASE);    // Read the flex resitors.
-		calc_all(5);        // Map the sensors value to servo values.
-		imu_read_calc();    // Read the IMU and map to servo values.
+    while(1) { 
+        flex_read(BASE);    // Read the flex resitors.
+        calc_all(5);        // Map the sensors value to servo values.
+        imu_read_calc();    // Read the IMU and map to servo values.
         print_send();       // Print the data that will be sent
-		send_data();        // Send the sensor data to the robotic hand controller
-		receive();          // Recieve feedback data from the robotic hand controller
-		print_receive();    // Print the recieved data.
-		servo_val_set();    // Set the servo values.
-		servo_write(5);     // Write to the buzzers.
-		delay(300);         // Wait for 300ms.
-	}
-	close(sock);
-	printf("Client Finish!!!\n");
+        send_data();        // Send the sensor data to the robotic hand controller
+        receive();          // Recieve feedback data from the robotic hand controller
+        print_receive();    // Print the recieved data.
+        servo_val_set();    // Set the servo values.
+        servo_write(5);     // Write to the buzzers.
+        delay(300);         // Wait for 300ms.
+    }
+    close(sock);
+    printf("Client Finish!!!\n");
     
-   	return 0;   
+    return 0;   
 }

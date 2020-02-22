@@ -2,10 +2,8 @@
  * @file hand.cpp
  * @author David Hudson, Thien Nguyen, David Vercillo
  * @brief File for testing robotic hand sensors.
- * @version 0.6
- * @date 2019-09-21
+ * @date 2020-02-22
  * 
- * @copyright Copyright (c) 2019
  * 
  */
 #include <stdlib.h>
@@ -34,98 +32,117 @@ float voltage[5];
 #define BASE 100
 #define SPI_CHAN 0
 
+
+// 
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+
+// Setup the pins for servos
 void servo_setup(int size) {
-	for (int i=0; i<size; i++) {
-		pinMode(PWM[i],OUTPUT);
-		softPwmCreate(PWM[i],0,50);
-	}
+    for (int i=0; i<size; i++) {
+        pinMode(PWM[i],OUTPUT);
+        softPwmCreate(PWM[i],0,50);
+    }
 }
 
-void servo_write(int size) {	
-	for (int i=0; i<size; i++) {
-		softPwmWrite(PWM[i],servo_val[i]);
-	}
+
+// Write pwm values to servos
+void servo_write(int size) {    
+    for (int i=0; i<size; i++) {
+        softPwmWrite(PWM[i],servo_val[i]);
+    }
 }
 
+
+// read pressure values
 void pressure_read(int base) {
-	for (int i=0; i<5; i++) {
-		pressure_data[i] = analogRead(base+i);
-	}
+    for (int i=0; i<5; i++) {
+        pressure_data[i] = analogRead(base+i);
+    }
 }
 
+
+// calculate the voltage levels from pressure values
 void calc_voltage(int size) {
-	for (int i=0; i<size; i++) {
-		voltage[i] = pressure_data[i]*(5.0)/1023.0;
-	}
+    for (int i=0; i<size; i++) {
+        voltage[i] = pressure_data[i]*(5.0)/1023.0;
+    }
 }
 
+
+// Calculate the resistence
 void calc_resistance(int size) {
-	for (int i=0; i<size; i++) {
-		resistance[i] = R_DIV*(5.0/voltage[i] - 1.0);
-	}
-}
-void calc_pressure(int size) {
-	for (int i =0; i<size; i++) {
-		float fsrG = 1.0/resistance[i];
-		if (resistance[i] <=600) {
-			pressure[i] = (fsrG - 0.00075)/ 0.00000032639;
-		}
-		else {
-			pressure[i] = fsrG / 0.000000642857;
-		}
-	}
+    for (int i=0; i<size; i++) {
+        resistance[i] = R_DIV*(5.0/voltage[i] - 1.0);
+    }
 }
 
-void calc_all(int size) {
-	for (int i =0; i<size; i++) {
-		voltage[i] = pressure_data[i]*(5.0)/1023.0;
-		resistance[i] = R_DIV*(5.0/voltage[i] - 1.0);
-		float fsrG = 1.0/resistance[i];
-		if (resistance[i] <=600) {
-			pressure[i] = (fsrG - 0.00075)/ 0.00000032639;
-		}
-		else {
-			pressure[i] = fsrG / 0.000000642857;
-		}
-	}
+
+// Calculate the pressure
+void calc_pressure(int size) {
+    for (int i =0; i<size; i++) {
+        float fsrG = 1.0/resistance[i];
+        if (resistance[i] <=600) {
+            pressure[i] = (fsrG - 0.00075)/ 0.00000032639;
+        }
+        else {
+            pressure[i] = fsrG / 0.000000642857;
+        }
+    }
 }
+
+
+// Calculate voltage, resistance and pressure
+void calc_all(int size) {
+    for (int i =0; i<size; i++) {
+        voltage[i] = pressure_data[i]*(5.0)/1023.0;
+        resistance[i] = R_DIV*(5.0/voltage[i] - 1.0);
+        float fsrG = 1.0/resistance[i];
+        if (resistance[i] <=600) {
+            pressure[i] = (fsrG - 0.00075)/ 0.00000032639;
+        }
+        else {
+            pressure[i] = fsrG / 0.000000642857;
+        }
+    }
+}
+
+
 int main() {
-	
-	wiringPiSetup();
-	int check;
-	check = mcp3004Setup(BASE,SPI_CHAN);
-	if (check == -1) {
-		fprintf(stderr, "Failed to communicate with ADC_Chip.\n");
-        	exit(EXIT_FAILURE);
-	}
-	int MAX = 20;
-	//pinMode(PWM[0],OUTPUT);
-	//softPwmCreate(PWM[0],0,MAX);
-	
-	while(1) {
-		pressure_read(BASE);
-		calc_all(5);
-		for (int i =0;	i<5; i++){
-			cout <<"PRESSURE: " << pressure[i] << ", "; 
-		}
-		cout << "\n";
-		delay(500);
-	}
-	
-	/*
-	Order:
-	Setup
-	while(1) {
-	Read Analog
-	Calculate Data
-	Send Data
-	Receive Data
-	Write to Servo
-	}
-	*/
-	
+        
+    wiringPiSetup();
+    int check;
+    check = mcp3004Setup(BASE,SPI_CHAN);
+    if (check == -1) {
+        fprintf(stderr, "Failed to communicate with ADC_Chip.\n");
+        exit(EXIT_FAILURE);
+    }
+    int MAX = 20;
+    //pinMode(PWM[0],OUTPUT);
+    //softPwmCreate(PWM[0],0,MAX);
+        
+    while(1) {
+        pressure_read(BASE);
+        calc_all(5);
+        for (int i =0;  i<5; i++) {
+            cout <<"PRESSURE: " << pressure[i] << ", "; 
+        }
+        cout << "\n";
+        delay(500);
+    }
+        
+    /*
+    Order:
+    Setup
+    while(1) {
+    Read Analog
+    Calculate Data
+    Send Data
+    Receive Data
+    Write to Servo
+    }
+    */
+        
 }
